@@ -1,6 +1,15 @@
 <?php
 session_start();
 
+// Обработка выхода из системы
+if (isset($_GET['logout']) && $_GET['logout'] == 1) {
+    // Удаляем токен из сессии
+    $_SESSION['token'] = '';
+    // Перенаправляем на страницу авторизации
+    header("Location: login.php");
+    exit;
+}
+
 $db = new PDO('mysql:host=localhost; dbname=module; charset=utf8', 
 'root', 
 null, 
@@ -87,12 +96,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 Введите логин
                 <?php if(isset($error) && empty($login)): ?><span class="error">Необходимо заполнить</span><?php endif; ?>
             </label>
-            <input type="text" name="login" id="login" required>
+            <input type="text" name="login" id="login" >
             <label for="password">
                 Введите пароль
                 <?php if(isset($error) && empty($password)): ?><span class="error">Необходимо заполнить</span><?php endif; ?>
             </label>
-            <input type="password" name="password" id="password" required>
+            <input type="password" name="password" id="password" >
             <button type="submit">Войти</button>
             <?php if(isset($error)): ?><p class="error"><?php echo $error; ?></p><?php endif; ?>
         </form>
