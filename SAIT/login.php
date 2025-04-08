@@ -43,17 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'] ?? '';
     
     // 2. Проверить переданы ли они, если нет вернуть ошибку
-    // Если да -> ничего не делаем
-    // Если нет -> ошибка : поля необходтмо заполнить
     if (empty($login) || empty($password)) {
         $error = 'Поля необходимо заполнить';
     } else {
-        // 3. Сравнить с данными в БД
-        // Если совпали -> генерируем токен, записываем в сессию и бд, редирект
-        // Если нет -> Ошибка : неверный логин или пароль
-        $user = $db->query("SELECT id, password, type FROM users WHERE login = '$login'")->fetch();
+        // 3. Проверяем не заблокирован ли пользователь
+        $user = $db->query("SELECT id, password, type, blocked, amountAttempt FROM users WHERE login = '$login'")->fetch();
         
-        if ($user && $user['password'] === $password) {
+        if ($user && $user['blocked'] == 1) {
+            $error = 'Пользователь заблокирован. Обратитесь к администрации';
+        } else if ($user && $user['password'] === $password) {
+            // Сбрасываем количество попыток при успешном входе
+            $userId = $user['id'];
+            $db->query("UPDATE users SET amountAttempt = 0, latest = NOW() WHERE id = $userId");
+            
             // Генерируем токен
             $token = bin2hex(random_bytes(16));
             
@@ -61,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['token'] = $token;
             
             // Записываем токен в БД
-            $userId = $user['id'];
             $db->query("UPDATE users SET token = '$token' WHERE id = $userId");
             
             // Редирект в зависимости от типа пользователя
@@ -73,7 +74,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit;
             }
         } else {
-            $error = 'Неверный логин или пароль';
+            // Увеличиваем счетчик неудачных попыток
+            if ($user) {
+                $newAttempt = $user['amountAttempt'] + 1;
+                $userId = $user['id'];
+                
+                // Если достигнут лимит попыток - блокируем пользователя
+                if ($newAttempt >= 3) {
+                    $db->query("UPDATE users SET blocked = 1, amountAttempt = $newAttempt WHERE id = $userId");
+                    $error = 'Пользователь заблокирован. Обратитесь к администрации';
+                } else {
+                    $db->query("UPDATE users SET amountAttempt = $newAttempt WHERE id = $userId");
+                    $error = 'Неверный логин или пароль. Осталось попыток: ' . (3 - $newAttempt);
+                }
+            } else {
+                $error = 'Неверный логин или пароль';
+            }
         }
     }
 }

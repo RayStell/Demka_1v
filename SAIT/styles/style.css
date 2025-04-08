@@ -1,132 +1,364 @@
-:root {
-    --primary-color: #4a6fa5;
-    --primary-hover: #3a5985;
-    --background-color: #f5f7fa;
-    --text-color: #333;
-    --error-color: #e74c3c;
-    --success-color: #27ae60;
-    --border-color: #ddd;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-}
-
+/* Общие стили */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-html, body {
-    height: 100%;
-    background-color: var(--background-color);
-    color: var(--text-color);
-}
-
 body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 20px;
 }
 
-.login {
+/* Стили для форм входа и панели пользователя */
+.login, .admin-panel {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px var(--shadow-color);
 }
 
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.admin-panel {
+    max-width: 1000px;
 }
 
 h1 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
+    color: #2c3e50;
+    margin-bottom: 20px;
     text-align: center;
-    font-size: 1.8rem;
+    font-size: 24px;
+}
+
+h2 {
+    color: #34495e;
+    margin: 20px 0;
+    font-size: 20px;
+}
+
+/* Стили для форм */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 label {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    color: #2c3e50;
     font-weight: 500;
-    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-input {
+input[type="text"],
+input[type="password"] {
+    width: 100%;
     padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.3s;
 }
 
-input:focus {
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #3498db;
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
 }
 
 button {
-    background-color: var(--primary-color);
+    background: #3498db;
     color: white;
-    border: none;
     padding: 12px;
-    border-radius: 4px;
-    font-weight: 600;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: 500;
+    transition: background 0.3s;
 }
 
 button:hover {
-    background-color: var(--primary-hover);
+    background: #2980b9;
+}
+
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* Стили для сообщений об ошибках и успехе */
+.error, .success {
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    text-align: center;
 }
 
 .error {
-    color: var(--error-color);
-    font-size: 13px;
-    display: block;
-    margin-top: 4px;
-}
-
-p.error {
-    background-color: rgba(231, 76, 60, 0.1);
-    padding: 10px;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 14px;
+    background: #ffe6e6;
+    color: #d63031;
+    border: 1px solid #fab1a0;
 }
 
 .success {
-    color: var(--success-color);
-    font-size: 14px;
-    background-color: rgba(39, 174, 96, 0.1);
-    padding: 10px;
-    border-radius: 4px;
-    text-align: center;
+    background: #e6ffe6;
+    color: #00b894;
+    border: 1px solid #55efc4;
 }
 
+/* Стили для ссылок */
 a {
-    color: var(--primary-color);
+    color: #3498db;
     text-decoration: none;
-    text-align: center;
-    font-size: 14px;
     transition: color 0.3s;
 }
 
 a:hover {
-    color: var(--primary-hover);
-    text-decoration: underline;
+    color: #2980b9;
 }
 
-p {
-    text-align: center;
-    font-size: 14px;
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .admin-panel {
+        padding: 15px;
+    }
+    
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    th, td {
+        padding: 8px 10px;
+    }
+    
+    input[type="text"],
+    input[type="password"],
+    button {
+        padding: 10px;
+    }
+}
+
+/* Стили для кнопок блокировки/разблокировки */
+.btn-unblock, .btn-block {
+    color: white;
+    padding: 8px 15px;
+    font-size: 13px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.btn-unblock {
+    background: #27ae60;
+}
+
+.btn-block {
+    background: #e74c3c;
+}
+
+.btn-unblock:hover {
+    background: #219a52;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-block:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Анимация для кнопок */
+.btn-unblock, .btn-block {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-unblock:after, .btn-block:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255,255,255,.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.btn-unblock:focus:not(:active):after, 
+.btn-block:focus:not(:active):after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+/* Статус пользователя */
+td:nth-child(4) {
+    font-weight: 500;
+}
+
+td:nth-child(4):contains('Активен') {
+    color: #27ae60;
+}
+
+td:nth-child(4):contains('Заблокирован') {
+    color: #e74c3c;
+}
+
+/* Дополнительные стили для панели администратора */
+.admin-panel p {
+    color: #34495e;
+    margin-bottom: 15px;
+}
+
+.admin-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3498db;
+}
+
+/* Статусы пользователей */
+.status-active {
+    color: #27ae60;
+    font-weight: 500;
+}
+
+.status-blocked {
+    color: #e74c3c;
+    font-weight: 500;
+}
+
+/* Контейнер таблицы */
+.table-container {
+    margin: 20px -30px;
+    overflow-x: auto;
+    padding: 0 30px;
+}
+
+/* Ссылка выхода */
+.logout-link {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+.logout-link:hover {
+    background: #c0392b;
+    color: white;
+}
+
+/* Дополнительные стили для мобильных устройств */
+@media (max-width: 768px) {
+    .table-container {
+        margin: 20px -15px;
+        padding: 0 15px;
+    }
+    
+    .admin-info {
+        margin: -10px -15px 20px;
+        border-radius: 0;
+    }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error, .success {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Улучшения для таблицы */
+table thead th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    box-shadow: 0 1px 0 #ddd;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* Стили для четных строк таблицы */
+tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+tr:hover {
+    background: #f1f3f5;
+}
+
+/* Улучшенные стили для кнопок */
+button[name="unblock_user"] {
+    background: #27ae60;
+    color: white;
+    padding: 8px 15px;
+    font-size: 13px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+button[name="unblock_user"]:hover {
+    background: #219a52;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

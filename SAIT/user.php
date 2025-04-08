@@ -25,6 +25,10 @@ if (!$user) {
     exit();
 }
 
+// Обновляем дату последней активности
+$userId = $user['id'];
+$db->query("UPDATE users SET latest = NOW() WHERE id = $userId");
+
 // Если тип пользователя = admin -> на страницу admin
 if ($user['type'] == 'admin') {
     header("Location: admin.php");
@@ -56,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = 'Пароли не совпадают';
     } else {
         // По токену обновляем пароль пользователю
-        $userId = $user['id'];
         $stmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
         $result = $stmt->execute([$newPassword, $userId]);
         
