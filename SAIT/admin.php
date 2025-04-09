@@ -27,6 +27,58 @@ if (!$admin || $admin['type'] !== 'admin') {
 $error = '';
 $success = '';
 
+// Обработка добавления нового пользователя
+if (isset($_POST['add_user'])) {
+    $login = trim($_POST['login'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $name = trim($_POST['name'] ?? '');
+    $surname = trim($_POST['surname'] ?? '');
+    
+    if (empty($login) || empty($password) || empty($name) || empty($surname)) {
+        $error = 'Все поля обязательны для заполнения';
+    } else {
+        // Проверяем, не существует ли уже такой логин
+        $stmt = $db->prepare("SELECT id FROM users WHERE login = ?");
+        $stmt->execute([$login]);
+        if ($stmt->fetch()) {
+            $error = 'Пользователь с таким логином уже существует';
+        } else {
+            $stmt = $db->prepare("INSERT INTO users (login, password, name, surname, type) VALUES (?, ?, ?, ?, 'user')");
+            if ($stmt->execute([$login, $password, $name, $surname])) {
+                $success = 'Пользователь успешно добавлен';
+            } else {
+                $error = 'Ошибка при добавлении пользователя';
+            }
+        }
+    }
+}
+
+// Обработка редактирования пользователя
+if (isset($_POST['edit_user'])) {
+    $userId = (int)$_POST['user_id'];
+    $name = trim($_POST['edit_name'] ?? '');
+    $surname = trim($_POST['edit_surname'] ?? '');
+    $password = trim($_POST['edit_password'] ?? '');
+    
+    if (empty($name) || empty($surname)) {
+        $error = 'Имя и фамилия обязательны для заполнения';
+    } else {
+        if (!empty($password)) {
+            $stmt = $db->prepare("UPDATE users SET name = ?, surname = ?, password = ? WHERE id = ?");
+            $result = $stmt->execute([$name, $surname, $password, $userId]);
+        } else {
+            $stmt = $db->prepare("UPDATE users SET name = ?, surname = ? WHERE id = ?");
+            $result = $stmt->execute([$name, $surname, $userId]);
+        }
+        
+        if ($result) {
+            $success = 'Данные пользователя обновлены';
+        } else {
+            $error = 'Ошибка при обновлении данных';
+        }
+    }
+}
+
 // Обработка разблокировки пользователя
 if (isset($_POST['unblock_user']) && !empty($_POST['user_id'])) {
     $userId = (int)$_POST['user_id'];
@@ -79,6 +131,30 @@ $db->query("UPDATE users SET blocked = 1 WHERE latest < '$monthAgo' AND type != 
         <?php if(!empty($success)): ?>
             <p class="success"><?php echo $success; ?></p>
         <?php endif; ?>
+
+        <!-- Форма добавления пользователя -->
+        <div class="add-user-form">
+            <h2>Добавить пользователя</h2>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="login">Логин</label>
+                    <input type="text" id="login" name="login" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Имя</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="surname">Фамилия</label>
+                    <input type="text" id="surname" name="surname" required>
+                </div>
+                <button type="submit" name="add_user" class="btn-add">Добавить пользователя</button>
+            </form>
+        </div>
         
         <h2>Список пользователей</h2>
         <div class="table-container">
@@ -106,17 +182,27 @@ $db->query("UPDATE users SET blocked = 1 WHERE latest < '$monthAgo' AND type != 
                         <td><?php echo $user['amountAttempt']; ?></td>
                         <td><?php echo $user['latest'] ? date('d.m.Y H:i', strtotime($user['latest'])) : 'Нет данных'; ?></td>
                         <td>
-                            <?php if($user['blocked']): ?>
-                            <form method="POST" style="display: inline;">
-                                <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                <button type="submit" name="unblock_user" class="btn-unblock">Разблокировать</button>
-                            </form>
-                            <?php else: ?>
-                            <form method="POST" style="display: inline;">
-                                <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                <button type="submit" name="block_user" class="btn-block">Заблокировать</button>
-                            </form>
-                            <?php endif; ?>
+                            <div class="action-buttons">
+                                <?php if($user['blocked']): ?>
+                                <form method="POST" style="display: inline;">
+                                    <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                    <button type="submit" name="unblock_user" class="btn-unblock">Разблокировать</button>
+                                </form>
+                                <?php else: ?>
+                                <form method="POST" style="display: inline;">
+                                    <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                    <button type="submit" name="block_user" class="btn-block">Заблокировать</button>
+                                </form>
+                                <?php endif; ?>
+                                <button type="button" class="btn-edit" onclick="openEditModal(<?php 
+                                    echo htmlspecialchars(json_encode([
+                                        'id' => $user['id'],
+                                        'name' => $user['name'],
+                                        'surname' => $user['surname'],
+                                        'login' => $user['login']
+                                    ])); 
+                                ?>)">Редактировать</button>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -124,7 +210,60 @@ $db->query("UPDATE users SET blocked = 1 WHERE latest < '$monthAgo' AND type != 
             </table>
         </div>
         
+        <!-- Модальное окно редактирования -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Редактировать пользователя</h2>
+                <form method="POST">
+                    <input type="hidden" name="user_id" id="edit_user_id">
+                    <div class="form-group">
+                        <label for="edit_login">Логин</label>
+                        <input type="text" id="edit_login" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_name">Имя</label>
+                        <input type="text" id="edit_name" name="edit_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_surname">Фамилия</label>
+                        <input type="text" id="edit_surname" name="edit_surname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_password">Новый пароль (оставьте пустым, чтобы не менять)</label>
+                        <input type="password" id="edit_password" name="edit_password">
+                    </div>
+                    <button type="submit" name="edit_user" class="btn-save">Сохранить изменения</button>
+                </form>
+            </div>
+        </div>
+        
         <p><a href="login.php?logout=1" class="logout-link">Выйти</a></p>
     </div>
+
+    <script>
+    // Функции для работы с модальным окном
+    const modal = document.getElementById('editModal');
+    const span = document.getElementsByClassName('close')[0];
+
+    function openEditModal(userData) {
+        modal.style.display = 'block';
+        document.getElementById('edit_user_id').value = userData.id;
+        document.getElementById('edit_login').value = userData.login;
+        document.getElementById('edit_name').value = userData.name;
+        document.getElementById('edit_surname').value = userData.surname;
+        document.getElementById('edit_password').value = '';
+    }
+
+    span.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+    </script>
 </body>
 </html> 
